@@ -76,7 +76,10 @@ class SignInWindow(Gtk.ApplicationWindow):
         for entry in self.full_log:
             if entry["id"] == id:
                 if time.time() - entry["time"] <= 5: return
-                else: signing_out = True
+                else:
+                    signing_out = True
+                    self.full_log.remove(entry)
+                    break
 
         result = check_id(id)
         if result == "notask" and signing_out: result = "allowed"
@@ -88,20 +91,23 @@ class SignInWindow(Gtk.ApplicationWindow):
         log = "{} (signing {}, {})\n{}".format(id, "out" if signing_out else "in", result, log)
         self.log.set_text(log)
 
-        self.full_log.append({
-            "id": id,
-            "time": time.time()
-        })
+        if not signing_out:
+            self.full_log.append({
+                "id": id,
+                "time": time.time()
+            })
 
         if result == "allowed":
             self.text.props.label = MESSAGE_SIGNED_OUT if signing_out else MESSAGE_ALLOWED
             self.flash("flash-green")
+            add_to_spreadsheet(id)
         if result == "denied":
             self.text.props.label = MESSAGE_DENIED
             self.flash("flash-red")
         if result == "notask":
             self.text.props.label = MESSAGE_NOT_ON_TASK_LIST
             self.flash("flash-yellow")
+            add_to_spreadsheet(id)
 
     def flash(self, color):
         self.get_style_context().add_class(color)
