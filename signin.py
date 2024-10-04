@@ -91,7 +91,7 @@ class SignInWindow(Gtk.ApplicationWindow):
         log = "{} (signing {}, {})\n{}".format(id, "out" if signing_out else "in", result, log)
         self.log.set_text(log)
 
-        if not signing_out:
+        if not result == "denied":
             self.full_log.append({
                 "id": id,
                 "time": time.time()
