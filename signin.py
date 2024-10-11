@@ -222,7 +222,7 @@ class SignInWindow(Gtk.ApplicationWindow):
 class SignInApplication(Gtk.Application):
     def __init__(self):
         super().__init__(application_id="org.lasarobotics.signin")
-        GLib.set_application_name('Sign-In Interface')
+        GLib.set_application_name('Robotics Sign-In')
 
     def do_activate(self):
         window = SignInWindow(application=self)
