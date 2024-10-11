@@ -14,8 +14,10 @@ from google.auth.transport.requests import Request
 from google.oauth2.credentials import Credentials
 from google_auth_oauthlib.flow import InstalledAppFlow
 
-f = open("spreadsheet.json", "r")
-SPREADSHEET_ID = json.load(f)["id"]
+f = open("config.json", "r")
+j = json.load(f)
+SPREADSHEET_ID = j["spreadsheet_id"]
+CMD_PASSWORD = j["cmd_password"]
 f.close()
 SCOPES = ["https://www.googleapis.com/auth/spreadsheets"]
 service = None
@@ -170,10 +172,10 @@ class SignInWindow(Gtk.ApplicationWindow):
     def id_entered(self, widget):
         id = widget.get_text()
         widget.set_text("")
-        # TODO: add windows cmd and a configurable password via a .json
-        #if id == "password":
-        #    os.system("gnome-terminal")
-        #    return
+        # !! UNTESTED !!
+        if id == CMD_PASSWORD:
+            os.system("cmd.exe /c start cmd")
+            return
         signing_out = False
         for entry in self.full_log:
             if entry["id"] == id:
