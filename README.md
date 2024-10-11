@@ -15,8 +15,10 @@ This is the application that will run on the sign-in computer. It provides a sim
 If you are on Windows, install WSL with `wsl --install -d debian` and use that to run the program.
 
 1. Download the source from this repository and extract it in the home directory.
-2. `cd` into the directory, then run `./install.sh`. If it gives a permission error, give it execute permissions with `chmod +x ./install.sh`.
-If you're on Debian, the install script should install all the required packages for you.
+2. `cd` into the directory, then run `./install.sh`. If it gives a permission error, give it execute permissions with `chmod +x ./install.sh`. Distros other than Debian are not currently supported.
+3. Through Google Cloud, create credentials and put them in `credentials.json`.
+4. Create `spreadsheet.json` and put the ID of the spreadsheet, formatted like `{"id": "YOUR_SPREADSHEET_ID"}`.
+
 
 OPTIONAL: If you want dark mode on WSL or a barebones Linux system, create the file `~/.config/gtk-4.0/settings.ini` and inside it write the following:
 ```
