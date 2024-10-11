@@ -170,6 +170,10 @@ class SignInWindow(Gtk.ApplicationWindow):
     def id_entered(self, widget):
         id = widget.get_text()
         widget.set_text("")
+        # TODO: add windows cmd and a configurable password via a .json
+        #if id == "password":
+        #    os.system("gnome-terminal")
+        #    return
         signing_out = False
         for entry in self.full_log:
             if entry["id"] == id:
@@ -202,14 +206,12 @@ class SignInWindow(Gtk.ApplicationWindow):
         if result == "allowed":
             self.text.props.label = MESSAGE_SIGNED_OUT if signing_out else MESSAGE_ALLOWED
             self.flash("flash-green")
-            add_to_spreadsheet(id)
         if result == "denied":
             self.text.props.label = MESSAGE_DENIED
             self.flash("flash-red")
         if result == "notask":
             self.text.props.label = MESSAGE_NOT_ON_TASK_LIST
             self.flash("flash-yellow")
-            add_to_spreadsheet(id)
 
     def flash(self, color):
         self.get_style_context().add_class(color)
