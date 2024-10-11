@@ -12,9 +12,19 @@ This is the application that will run on the sign-in computer. It provides a sim
 - If someone has already signed in, it is assumed they are signing out (though it's not logged in the spreadsheet differently; only the message and small log show this)
 
 ## Installation
-1. Make sure you have python, GTK, etc on the system (will add detailed instructions later)
-2. Download the source from this repository and extract it in the home directory.
-3. `cd` into the directory, then run `./install.sh`. If it gives a permission error, give it execute permissions with `chmod +x ./install.sh`.
+If you are on Windows, install WSL with `wsl --install -d debian` and use that to run the program.
+
+1. Download the source from this repository and extract it in the home directory.
+2. `cd` into the directory, then run `./install.sh`. If it gives a permission error, give it execute permissions with `chmod +x ./install.sh`. Distros other than Debian are not currently supported.
+3. Through Google Cloud, create credentials and put them in `credentials.json`.
+4. Create `spreadsheet.json` and put the ID of the spreadsheet, formatted like `{"id": "YOUR_SPREADSHEET_ID"}`.
+
+
+OPTIONAL: If you want dark mode on WSL or a barebones Linux system, create the file `~/.config/gtk-4.0/settings.ini` and inside it write the following:
+```
+[Settings]
+gtk-application-prefer-dark-theme=1
+```
 
 ## Running
 Simply run `./run.sh`. If it gives a permission error, give it execute permissions with `chmod +x ./run.sh`.
