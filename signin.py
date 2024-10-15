@@ -73,7 +73,7 @@ def get_current_information(index):
             .execute()
         )
         rows = result.get("values", [])
-        return {"last_name": rows[0][4], "task": rows[0][7], "on_roster": rows[0][8]}
+        return {"last_name": rows[0][4], "task": rows[0][7], "on_roster": rows[0][8] if len(rows[0]) == 9 else "No"}
     except HttpError as error:
         print(f"An error occured: {error}")
         return error
