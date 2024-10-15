@@ -69,11 +69,11 @@ def get_current_information(index):
         result = (
             service.spreadsheets()
             .values()
-            .get(spreadsheetId=SPREADSHEET_ID, range="A" + str(index) + ":H" + str(index))
+            .get(spreadsheetId=SPREADSHEET_ID, range="A" + str(index) + ":I" + str(index))
             .execute()
         )
         rows = result.get("values", [])
-        return {"last_name": rows[0][4], "status": rows[0][7]}
+        return {"last_name": rows[0][4], "task": rows[0][7], "on_roster": rows[0][8]}
     except HttpError as error:
         print(f"An error occured: {error}")
         return error
@@ -105,7 +105,9 @@ def remove_from_spreadsheet(index):
 def check(index):
     info = get_current_information(index)
     if info["last_name"] != "0":
-        if info["status"] == "Approved":
+        if info["on_roster"] == "No":
+            return "noroster"
+        if info["task"] == "Approved":
             return "allowed"
         else: return "notask"
     return "denied"
@@ -118,6 +120,7 @@ MESSAGE_ALLOWED = "Successfully signed in. Welcome to robotics!"
 MESSAGE_SIGNED_OUT = "Successfully signed out. Goodbye!"
 MESSAGE_DENIED = "Invalid ID."
 MESSAGE_NOT_ON_TASK_LIST = "You aren't on the task list!"
+MESSAGE_NOT_ON_ROSTER = "You aren't on the team roster!"
 
 class SignInWindow(Gtk.ApplicationWindow):
     def __init__(self, **kargs):
@@ -214,6 +217,9 @@ class SignInWindow(Gtk.ApplicationWindow):
         if result == "notask":
             self.text.props.label = MESSAGE_NOT_ON_TASK_LIST
             self.flash("flash-yellow")
+        if result == "noroster":
+            self.text.props.label = MESSAGE_NOT_ON_ROSTER
+            self.flash("flash-red")
 
     def flash(self, color):
         self.get_style_context().add_class(color)
