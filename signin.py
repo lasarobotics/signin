@@ -73,7 +73,7 @@ def get_current_information(index):
             .execute()
         )
         rows = result.get("values", [])
-        return {"last_name": rows[0][4], "task": rows[0][7], "on_roster": rows[0][8] if len(rows[0]) == 9 else "No"}
+        return {"last_name": rows[0][4], "first_name": rows[0][5], "time": rows[0][3], "task": rows[0][7] == "Approved", "on_roster": len(rows[0]) == 9 and rows[0][8] == "Yes"}
     except HttpError as error:
         print(f"An error occured: {error}")
         return error
@@ -102,12 +102,11 @@ def remove_from_spreadsheet(index):
         print(f"An error occured: {error}")
         return error
 
-def check(index):
-    info = get_current_information(index)
+def check(info):
     if info["last_name"] != "0":
-        if info["on_roster"] == "No":
+        if not info["on_roster"]:
             return "noroster"
-        if info["task"] == "Approved":
+        if info["task"]:
             return "allowed"
         else: return "notask"
     return "denied"
@@ -190,7 +189,8 @@ class SignInWindow(Gtk.ApplicationWindow):
 
         global index
         add_to_spreadsheet(id, index)
-        result = check(index)
+        info = get_current_information(index)
+        result = check(info)
         if result == "notask" and signing_out: result = "allowed"
         if result == "denied": remove_from_spreadsheet(index)
         else: index += 1
@@ -199,7 +199,7 @@ class SignInWindow(Gtk.ApplicationWindow):
         if log.count('\n') == 10:
             log = '\n'.join(log.split('\n')[:-1])
             print("test")
-        log = "{} (signing {}, {})\n{}".format(id, "out" if signing_out else "in", result, log)
+        log = "{} {} {} (signing {}, {})\n{}".format(id, info["first_name"], info["last_name"], "out" if signing_out else "in", result, log)
         self.log.set_text(log)
 
         if not result == "denied":
