@@ -18,13 +18,6 @@ This is the application that will run on the sign-in computer. It provides a sim
 3. Through Google Cloud, create credentials and put them in `credentials.json`.
 4. Create `config.json` and put the ID of the spreadsheet and password to open CMD, formatted like `{"spreadsheet_id": "YOUR_SPREADSHEET_ID", "cmd_password": "YOUR_CMD_PASSWORD"}`.
 
-
-OPTIONAL: If you want dark mode on WSL or a Linux system without a full DE, create the file `~/.config/gtk-4.0/settings.ini` and inside it write the following:
-```
-[Settings]
-gtk-application-prefer-dark-theme=1
-```
-
 ## Running
 # THIS HAS NOT YET BEEN TESTED ON WINDOWS.
 Simply run `./run.sh` on Linux, or `.\run.bat` on Windows. If it gives a permission error, give it execute permissions with `chmod +x ./run.sh`.
