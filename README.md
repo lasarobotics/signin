@@ -13,8 +13,8 @@ This is the application that will run on the sign-in computer. It provides a sim
 
 ## Installation
 # THIS HAS NOT YET BEEN TESTED ON WINDOWS.
-1. Use Git to clone this repository or download the source and extract it in a directory of your choice.
-2. If you're on Linux, `cd` into the directory, then run `./install.sh`. If it gives a permission error, give it execute permissions with `chmod +x ./install.sh`. Linux distros other than Debian are not currently supported. If you're on Windows, you'll first need to install [Python](https://python.org/downloads). (More packages may be required, they will be added later) Then, `cd` into the directory and run `.\install.bat`. 
+1. Use Git (`sudo apt-get install git` or download it [here](https://git-scm.com/downloads) for Windows) to clone this repository or download the source and extract it in a directory of your choice.
+2. If you're on Linux, `cd` into the directory, then run `./install.sh`. If it gives a permission error, give it execute permissions with `chmod +x ./install.sh`. Linux distros other than Debian are not currently supported. You'll need to install Python (`sudo apt-get install python` or download it [here](https://python.org/downloads) for Windows). More packages may be required, they will be added later. Then, `cd` into the directory and run `.\install.bat`. 
 3. Through Google Cloud, create credentials and put them in `credentials.json`.
 4. Create `config.json` and put the ID of the spreadsheet and password to open CMD, formatted like `{"spreadsheet_id": "YOUR_SPREADSHEET_ID", "cmd_password": "YOUR_CMD_PASSWORD"}`.
 
