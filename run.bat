@@ -1,3 +1,1 @@
-venv\Scripts\activate.bat
-python signin.py
-deactivate
+venv\Scripts\python.exe signin.py
