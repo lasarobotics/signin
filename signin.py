@@ -1,11 +1,8 @@
 import sys
 import os
-import gi
+from PySide6 import QtCore, QtWidgets, QtGui
 import time
 import json
-
-gi.require_version("Gtk", "4.0")
-from gi.repository import GLib, Gtk
 
 import google.auth
 from googleapiclient.discovery import build
@@ -121,62 +118,55 @@ MESSAGE_DENIED = "Invalid ID."
 MESSAGE_NOT_ON_TASK_LIST = "You aren't on the task list!"
 MESSAGE_NOT_ON_ROSTER = "You aren't on the team roster!"
 
-class SignInWindow(Gtk.ApplicationWindow):
-    def __init__(self, **kargs):
-        super().__init__(**kargs, title='LASA Robotics Sign-In App')
+class SignInWindow(QtWidgets.QWidget):
+    def __init__(self):
+        super().__init__()
+        self.setWindowTitle("LASA Robotics Sign-In App")
 
-        vbox = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=6)
-        vbox.props.margin_start = 50
-        vbox.props.margin_end = 50
-        vbox.props.margin_top = 240
-        vbox.props.margin_bottom = 0
-        self.set_child(vbox)
+        self.id = QtWidgets.QLineEdit(self)
+        self.id.setAlignment(QtCore.Qt.AlignCenter)
+        self.id.setPlaceholderText("Student ID")
+        id_font = self.id.font()
+        id_font.setPixelSize(64)
+        self.id.setFont(id_font)
 
-        self.id = Gtk.Entry()
-        self.id.props.placeholder_text = "Student ID"
-        self.id.connect('activate', self.id_entered)
-        self.id.get_style_context().add_class("input")
-        vbox.append(self.id)
+        self.text = QtWidgets.QLabel(MESSAGE_WAITING, self)
+        self.text.setAlignment(QtCore.Qt.AlignCenter)
+        text_font = self.text.font()
+        text_font.setPixelSize(32)
+        self.text.setFont(text_font)
 
-        self.text = Gtk.Label()
-        self.text.props.label = MESSAGE_WAITING
-        self.text.get_style_context().add_class("text")
-        vbox.append(self.text)
+        self.log = QtWidgets.QLabel("", self)
+        self.log.setAlignment(QtCore.Qt.AlignBottom)
 
-        self.log = Gtk.Label()
-        self.log.props.label = ""
-        vbox.append(self.log)
+        self.layout = QtWidgets.QVBoxLayout(self)
+        self.layout.addStretch()
+        self.layout.addWidget(self.id)
+        self.layout.addWidget(self.text)
+        self.layout.addStretch()
+        self.layout.addWidget(self.log)
+
+        self.id.returnPressed.connect(self.id_entered)
 
         self.full_log = []
 
-        css_provider = Gtk.CssProvider()
-        css_provider.load_from_data(b"""
-        .flash-green { background-color: green; }
-        .flash-red { background-color: darkred; }
-        .flash-yellow { background-color: darkblue; }
-
-        .input { font-size: 128px; }
-        .text { font-size: 32px; }
-        """)
-        Gtk.StyleContext.add_provider_for_display(self.get_display(), css_provider, Gtk.STYLE_PROVIDER_PRIORITY_APPLICATION)
-
-        #button = Gtk.Button(label="Exit")
-        #button.connect('clicked', self.close)
-        #vbox.append(button)
-
     def reset_text(self):
-        self.text.props.label = MESSAGE_WAITING
+        self.text.setText(MESSAGE_WAITING)
 
-    def reset_flash(self, color):
-        self.get_style_context().remove_class(color)
+    def reset_flash(self):
+        pal = self.style().standardPalette()
+        self.setPalette(pal)
         self.reset_text()
 
-    def id_entered(self, widget):
-        id = widget.get_text()
-        widget.set_text("")
-        # !! UNTESTED !!
+    @QtCore.Slot()
+    def id_entered(self):
+        id = self.id.text()
+        self.id.clear()
+
         if id == CMD_PASSWORD:
+            # one of these will fail, but the other will open, that is intentional
             os.system("cmd.exe /c start cmd")
+            os.system("gnome-terminal")
             return
         signing_out = False
         for entry in self.full_log:
@@ -195,12 +185,12 @@ class SignInWindow(Gtk.ApplicationWindow):
         if result == "denied": remove_from_spreadsheet(index)
         else: index += 1
 
-        log = self.log.get_text()
+        log = self.log.text()
         if log.count('\n') == 10:
             log = '\n'.join(log.split('\n')[:-1])
             print("test")
         log = "{} {} {} (signing {}, {})\n{}".format(id, info["first_name"], info["last_name"], "out" if signing_out else "in", result, log)
-        self.log.set_text(log)
+        self.log.setText(log)
 
         if not result == "denied":
             self.full_log.append({
@@ -209,33 +199,33 @@ class SignInWindow(Gtk.ApplicationWindow):
             })
 
         if result == "allowed":
-            self.text.props.label = MESSAGE_SIGNED_OUT if signing_out else MESSAGE_ALLOWED
-            self.flash("flash-green")
+            self.text.setText(MESSAGE_SIGNED_OUT if signing_out else MESSAGE_ALLOWED)
+            self.flash("green")
         if result == "denied":
-            self.text.props.label = MESSAGE_DENIED
-            self.flash("flash-red")
+            self.text.setText(MESSAGE_DENIED)
+            self.flash("red")
         if result == "notask":
-            self.text.props.label = MESSAGE_NOT_ON_TASK_LIST
-            self.flash("flash-yellow")
+            self.text.setText(MESSAGE_NOT_ON_TASK_LIST)
+            self.flash("blue")
         if result == "noroster":
-            self.text.props.label = MESSAGE_NOT_ON_ROSTER
-            self.flash("flash-red")
+            self.text.setText(MESSAGE_NOT_ON_ROSTER)
+            self.flash("red")
 
     def flash(self, color):
-        self.get_style_context().add_class(color)
-        GLib.timeout_add_seconds(1 if color == "flash-green" else 3, self.reset_flash, color)
+        pal = QtGui.QPalette()
+        pal.setColor(QtGui.QPalette.Window, color)
+        self.setAutoFillBackground(True)
+        self.setPalette(pal)
 
-class SignInApplication(Gtk.Application):
-    def __init__(self):
-        super().__init__(application_id="org.lasarobotics.signin")
-        GLib.set_application_name('Robotics Sign-In')
+        dieTime = QtCore.QTime.currentTime().addSecs(1 if color == "green" else 3)
+        while (QtCore.QTime.currentTime() < dieTime):
+            QtCore.QCoreApplication.processEvents(QtCore.QEventLoop.AllEvents, 100);
+        self.reset_flash()
+        #GLib.timeout_add_seconds(1 if color == "flash-green" else 3, self.reset_flash, color)
 
-    def do_activate(self):
-        window = SignInWindow(application=self)
+app = QtWidgets.QApplication([])
+widget = SignInWindow()
+widget.resize(800, 500)
+widget.show()
 
-        window.present()
-
-
-app = SignInApplication()
-exit_status = app.run(sys.argv)
-sys.exit(exit_status)
+sys.exit(app.exec())
