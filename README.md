@@ -14,7 +14,7 @@ This is the application that will run on the sign-in computer. It provides a sim
 ## Installation
 If you are on Windows, install WSL with `wsl --install -d debian` and use that to run the program.
 
-1. Download the source from this repository and extract it in the home directory.
+1. Use Git to clone this repository or download the source and extract it in a directory of your choice..
 2. `cd` into the directory, then run `./install.sh`. If it gives a permission error, give it execute permissions with `chmod +x ./install.sh`. Distros other than Debian are not currently supported.
 3. Through Google Cloud, create credentials and put them in `credentials.json`.
 4. Create `config.json` and put the ID of the spreadsheet and password to open CMD, formatted like `{"spreadsheet_id": "YOUR_SPREADSHEET_ID", "cmd_password": "YOUR_CMD_PASSWORD"}`.
