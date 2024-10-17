@@ -174,7 +174,6 @@ class SignInWindow(Gtk.ApplicationWindow):
     def id_entered(self, widget):
         id = widget.get_text()
         widget.set_text("")
-        # !! UNTESTED !!
         if id == CMD_PASSWORD:
             os.system("cmd.exe /c start cmd")
             return
