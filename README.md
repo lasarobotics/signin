@@ -21,3 +21,6 @@ This is the application that will run on the sign-in computer. It provides a sim
 ## Running
 # THIS HAS NOT YET BEEN TESTED ON WINDOWS.
 Simply run `./run.sh` on Linux, or `.\run.bat` on Windows. If it gives a permission error on Linux, give it execute permissions with `chmod +x ./run.sh`.
+
+## Screenshots
+![Screenshot of the application running in Qt](./screenshots/qt.png)
