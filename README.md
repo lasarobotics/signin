@@ -28,3 +28,6 @@ gtk-application-prefer-dark-theme=1
 
 ## Running
 Simply run `./run.sh`. If it gives a permission error, give it execute permissions with `chmod +x ./run.sh`.
+
+## Screenshots
+![Screenshot of the application running in GTK](./screenshots/gtk.png)
