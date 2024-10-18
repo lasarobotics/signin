@@ -209,20 +209,22 @@ class SignInWindow(QtWidgets.QWidget):
 
         if result == "allowed":
             self.text.setText(MESSAGE_SIGNED_OUT if signing_out else MESSAGE_ALLOWED)
-            self.flash("green")
+            self.flash("lime", False)
         if result == "denied":
             self.text.setText(MESSAGE_DENIED)
-            self.flash("red")
+            self.flash("red", True)
         if result == "notask":
             self.text.setText(MESSAGE_NOT_ON_TASK_LIST)
-            self.flash("blue")
+            self.flash("blue", True)
         if result == "noroster":
             self.text.setText(MESSAGE_NOT_ON_ROSTER)
-            self.flash("red")
+            self.flash("red", True)
 
-    def flash(self, color):
-        pal = QtGui.QPalette()
-        pal.setColor(QtGui.QPalette.Window, color)
+    def flash(self, color, full_window):
+        pal = self.style().standardPalette()
+        pal.setColor(QtGui.QPalette.Base, color)
+        if full_window:
+            pal.setColor(QtGui.QPalette.Window, color)
         self.setAutoFillBackground(True)
         self.setPalette(pal)
 
