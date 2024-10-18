@@ -136,7 +136,7 @@ class SignInWindow(QtWidgets.QWidget):
         self.id.setAlignment(QtCore.Qt.AlignCenter)
         self.id.setPlaceholderText("Student ID")
         id_font = self.id.font()
-        id_font.setPixelSize(64)
+        id_font.setPixelSize(128)
         self.id.setFont(id_font)
 
         self.text = QtWidgets.QLabel(MESSAGE_WAITING, self)
