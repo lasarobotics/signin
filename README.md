@@ -12,7 +12,7 @@ This is the application that will run on the sign-in computer. It provides a sim
 - If someone has already signed in, it is assumed they are signing out (though it's not logged in the spreadsheet differently; only the message and small log show this)
 
 ## Installation
-If you are on Windows, use the [Qt version](../tree/qt).
+If you are on Windows, use the [Qt version](../../tree/qt).
 If you really like GTK or really hate light mode, install WSL with `wsl --install -d debian` and use that to run the program.
 
 1. Use Git to clone this repository or download the source and extract it in a directory of your choice..
