@@ -145,7 +145,7 @@ class SignInWindow(QtWidgets.QWidget):
         text_font.setPixelSize(32)
         self.text.setFont(text_font)
 
-        self.log = QtWidgets.QLabel("", self)
+        self.log = QtWidgets.QLabel("\n"*5, self)
         self.log.setAlignment(QtCore.Qt.AlignBottom)
 
         self.layout = QtWidgets.QVBoxLayout(self)
