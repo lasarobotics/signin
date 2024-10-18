@@ -195,9 +195,8 @@ class SignInWindow(QtWidgets.QWidget):
         else: index += 1
 
         log = self.log.text()
-        if log.count('\n') == 10:
+        if log.count('\n') == 5:
             log = '\n'.join(log.split('\n')[:-1])
-            print("test")
         log = "{} {} {} (signing {}, {})\n{}".format(id, info["first_name"], info["last_name"], "out" if signing_out else "in", result, log)
         self.log.setText(log)
 
