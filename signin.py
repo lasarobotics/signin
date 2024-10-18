@@ -33,14 +33,14 @@ def init_auth():
                 print("Invalid token.")
                 if tried_token_delete == False:
                     print("Attempting to refresh by deleting it.")
-                    os.delete("token.json")
-                    tried_token_delete == True
+                    os.remove("token.json")
+                    tried_token_delete = True
                     init_auth()
                 else:
                     print("Deleting the token didn't seem to work. Dropping you into a terminal, good luck.")
                     os.system("cmd.exe /c start cmd")
                     os.system("gnome-terminal")
-                quit()
+                    quit()
         else:
             flow = InstalledAppFlow.from_client_secrets_file(
                 "credentials.json", SCOPES
