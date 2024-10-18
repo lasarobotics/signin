@@ -1,5 +1,2 @@
 #!/bin/bash
-source ./venv/bin/activate &&
-python3 ./signin.py
-
-deactivate
+./venv/bin/python3 ./signin.py
