@@ -170,6 +170,7 @@ class SignInWindow(QtWidgets.QWidget):
     @QtCore.Slot()
     def id_entered(self):
         id = self.id.text()
+        if id == "": return
         self.id.clear()
 
         if id == CMD_PASSWORD:
