@@ -23,18 +23,26 @@ SCOPES = ["https://www.googleapis.com/auth/spreadsheets"]
 service = None
 
 def init_auth():
-    """
-    Creates the batch_update the user has access to.
-    Load pre-authorized user credentials from the environment.
-    TODO(developer) - See https://developers.google.com/identity
-    for guides on implementing OAuth2 for the application.
-    """
     creds = None
     if os.path.exists("token.json"):
         creds = Credentials.from_authorized_user_file("token.json")
     if not creds or not creds.valid:
         if creds and creds.expired and creds.refresh_token:
-            creds.refresh(Request())
+            try:
+                creds.refresh(Request())
+            except google.auth.exceptions.RefreshError as error:
+                print(error)
+                print("Invalid token.")
+                if tried_token_delete == False:
+                    print("Attempting to refresh by deleting it.")
+                    os.remove("token.json")
+                    tried_token_delete = True
+                    init_auth()
+                    quit()
+                else:
+                    print("Deleting the token didn't seem to work. Dropping you into a terminal, good luck.")
+                    os.system("cmd.exe /c start cmd")
+                    os.system("gnome-terminal")
         else:
             flow = InstalledAppFlow.from_client_secrets_file(
                 "credentials.json", SCOPES
