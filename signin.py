@@ -181,6 +181,7 @@ class SignInWindow(QtWidgets.QWidget):
             # one of these will fail, but the other will open, that is intentional
             os.system("cmd.exe /c start cmd")
             os.system("gnome-terminal")
+            self.text.clear()
             return
         signing_out = False
         for entry in self.full_log:
