@@ -121,6 +121,7 @@ init_auth()
 index = get_next_blank("C5:C11840")
 
 MESSAGE_WAITING = "Enter your ID above, then press ENTER."
+MESSAGE_PROCESSING = "Please wait..."
 MESSAGE_ALLOWED = "Successfully signed in. Welcome to robotics!"
 MESSAGE_SIGNED_OUT = "Successfully signed out. Goodbye!"
 MESSAGE_DENIED = "Invalid ID."
@@ -171,7 +172,10 @@ class SignInWindow(QtWidgets.QWidget):
     def id_entered(self):
         id = self.id.text()
         if id == "": return
+        if id.startswith("s"): id = id[1:]
         self.id.clear()
+        self.text.setText(MESSAGE_PROCESSING)
+        QtWidgets.QApplication.processEvents()
 
         if id == CMD_PASSWORD:
             # one of these will fail, but the other will open, that is intentional
