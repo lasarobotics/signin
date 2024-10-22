@@ -1,6 +1,3 @@
-# This version is no longer maintained
-We have switched to Qt because GTK has some performance issues and doesn't natively support Windows, the operating system currently running on the sign-in computer.
-
 # Sign-In Application
 This is the application that will run on the sign-in computer. It provides a simple interface to log sign-ins and sign-outs.
 
