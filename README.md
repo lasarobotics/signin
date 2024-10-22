@@ -1,6 +1,8 @@
 # Sign-In Application
 This is the application that will run on the sign-in computer. It provides a simple interface to log sign-ins and sign-outs.
 
+Note: not all features from the Qt version have been implemented yet.
+
 ## Logic
 - When an ID is valid and the person is on the task list, it's added to the spreadsheet and the screen flashes green for 1 second.
 - When an ID is valid but the person is NOT on the task list, it's still added to the spreadsheet, but the screen flashes blue for 3 seconds as an indicator.
