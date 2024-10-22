@@ -82,7 +82,7 @@ def get_current_information(index):
             .execute()
         )
         rows = result.get("values", [])
-        return {"last_name": rows[0][4], "first_name": rows[0][5], "time": rows[0][3], "task": rows[0][7] == "Approved", "on_roster": len(rows[0]) == 9 and rows[0][8] == "Yes"}
+        return {"last_name": rows[0][4], "first_name": rows[0][5], "grade": rows[0][6], "time": rows[0][3], "task": rows[0][7] == "Approved", "on_roster": len(rows[0]) == 9 and rows[0][8] == "Yes"}
     except HttpError as error:
         print(f"An error occured: {error}")
         return error
@@ -207,7 +207,7 @@ class SignInWindow(Gtk.ApplicationWindow):
         if log.count('\n') == 10:
             log = '\n'.join(log.split('\n')[:-1])
             print("test")
-        log = "{} {} {} (signing {}, {})\n{}".format(id, info["first_name"], info["last_name"], "out" if signing_out else "in", result, log)
+        log = "{} {} {} {} {} (signing {}, {})\n{}".format(info["time"], id, info["first_name"], info["last_name"], info["grade"], "out" if signing_out else "in", result, log)
         self.log.set_text(log)
 
         if not result == "denied":

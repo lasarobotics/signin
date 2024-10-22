@@ -1,2 +1,2 @@
 #!/bin/bash
-./venv/python3 ./signin.py
+./venv/bin/python3 ./signin.py
