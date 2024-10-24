@@ -226,7 +226,7 @@ class SignInWindow(QtWidgets.QWidget):
         log = self.log.text()
         if log.count('\n') == 5:
             log = '\n'.join(log.split('\n')[:-1])
-        log = "{} {} {} (signing {}, {})\n{}".format(id, info["first_name"], info["last_name"], "out" if signing_out else "in", result, log)
+        log = "{} {} {} (signing {}, <span style=\"background-color:{};\">{}</span>)<br>{}".format(id, info["first_name"], info["last_name"], "out" if signing_out else "in", self.color_of(result), result, log)
         self.log.setText(log)
 
         if not result == "denied":
@@ -239,16 +239,23 @@ class SignInWindow(QtWidgets.QWidget):
 
         if result == "allowed":
             self.text.setText(MESSAGE_SIGNED_OUT if signing_out else MESSAGE_ALLOWED)
-            self.flash("lime", False)
+            self.flash(self.color_of(result), False)
         if result == "denied":
             self.text.setText(MESSAGE_DENIED)
-            self.flash("red", True)
+            self.flash(self.color_of(result), True)
         if result == "notask":
             self.text.setText(MESSAGE_NOT_ON_TASK_LIST)
-            self.flash("blue", True)
+            self.flash(self.color_of(result), True)
         if result == "noroster":
             self.text.setText(MESSAGE_NOT_ON_ROSTER)
-            self.flash("red", True)
+            self.flash(self.color_of(result), True)
+
+    def color_of(self, result):
+        if result == "allowed": return "lime"
+        elif result == "denied": return "red"
+        elif result == "notask": return "blue"
+        elif result == "noroster": return "red"
+        return "yellow"
 
     def flash(self, color, full_window):
         pal = self.style().standardPalette()
