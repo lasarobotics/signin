@@ -1,5 +1,6 @@
 import sys
 import os
+import subprocess
 from PySide6 import QtCore, QtWidgets, QtGui
 import time
 import json
@@ -184,6 +185,10 @@ class SignInWindow(QtWidgets.QWidget):
             os.system("gnome-terminal")
             self.text.clear()
             return
+        if id == "up":
+            os.system("git pull")
+            subprocess.Popen(["bash", "./run.sh"])
+            quit()
         signing_out = False
         for entry in self.full_log:
             if entry["id"] == id:
