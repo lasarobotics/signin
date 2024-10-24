@@ -3,10 +3,10 @@ This is the application that will run on the sign-in computer. It provides a sim
 
 ## Commands
 There are some built-in commands you can enter instead of an ID to do certain things:
-- Open terminal / command prompt: configurable in config.json 
+- Open terminal / command prompt: configurable in config.json, only really useful on Windows 
 - Update & restart the program (doesn't reset the log): up
 - Reset saved log file (for a new day): reset
-- Close the window: exit
+- Close the window (doesn't reset the log): exit
 
 ## Logic
 - When an ID is valid and the person is on the task list, it's added to the spreadsheet and the screen flashes green for 1 second.
