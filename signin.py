@@ -159,6 +159,7 @@ class SignInWindow(QtWidgets.QWidget):
         self.id.returnPressed.connect(self.id_entered)
 
         self.full_log = []
+        self.queued_flash_reset = None
 
     def reset_text(self):
         self.text.setText(MESSAGE_WAITING)
@@ -233,10 +234,13 @@ class SignInWindow(QtWidgets.QWidget):
         self.setAutoFillBackground(True)
         self.setPalette(pal)
 
-        dieTime = QtCore.QTime.currentTime().addSecs(1 if color == "green" else 3)
+        time = QtCore.QTime.currentTime()
+        self.queued_flash_reset = time
+        dieTime = time.addSecs(1 if color == "green" else 3)
         while (QtCore.QTime.currentTime() < dieTime):
             QtCore.QCoreApplication.processEvents(QtCore.QEventLoop.AllEvents, 100);
-        self.reset_flash()
+        if self.queued_flash_reset == time:
+            self.reset_flash()
         #GLib.timeout_add_seconds(1 if color == "flash-green" else 3, self.reset_flash, color)
 
 app = QtWidgets.QApplication([])
