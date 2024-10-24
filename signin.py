@@ -147,7 +147,7 @@ class SignInWindow(QtWidgets.QWidget):
         text_font.setPixelSize(32)
         self.text.setFont(text_font)
 
-        self.log = QtWidgets.QLabel("\n"*5, self)
+        self.log = QtWidgets.QLabel("<br>"*5, self)
         self.log.setAlignment(QtCore.Qt.AlignBottom)
 
         self.layout = QtWidgets.QVBoxLayout(self)
@@ -203,7 +203,7 @@ class SignInWindow(QtWidgets.QWidget):
             quit()
         if id == "reset":
             self.full_log = []
-            self.log.setText("\n"*5)
+            self.log.setText("<br>"*5)
             self.save_log()
 
         signing_out = False
@@ -224,8 +224,8 @@ class SignInWindow(QtWidgets.QWidget):
         else: index += 1
 
         log = self.log.text()
-        if log.count('\n') == 5:
-            log = '\n'.join(log.split('\n')[:-1])
+        if log.count('<br>') == 5:
+            log = '<br>'.join(log.split('<br>')[:-1])
         log = "{} {} {} (signing {}, <span style=\"background-color:{};\">{}</span>)<br>{}".format(id, info["first_name"], info["last_name"], "out" if signing_out else "in", self.color_of(result), result, log)
         self.log.setText(log)
 
