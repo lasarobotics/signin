@@ -189,6 +189,9 @@ class SignInWindow(QtWidgets.QWidget):
             os.system("git pull")
             subprocess.Popen(["bash", "./run.sh"])
             quit()
+        if id == "exit":
+            quit()
+
         signing_out = False
         for entry in self.full_log:
             if entry["id"] == id:
