@@ -159,8 +159,18 @@ class SignInWindow(QtWidgets.QWidget):
 
         self.id.returnPressed.connect(self.id_entered)
 
-        self.full_log = []
+        self.load_log()
         self.queued_flash_reset = None
+
+    def load_log(self):
+        self.full_log = []
+        if os.path.exists("log.json"):
+            with open("log.json", "r") as f:
+                self.full_log = json.load(f)
+
+    def save_log(self):
+        with open("log.json", "w") as f:
+            json.dump(self.full_log, f)
 
     def reset_text(self):
         self.text.setText(MESSAGE_WAITING)
@@ -191,6 +201,10 @@ class SignInWindow(QtWidgets.QWidget):
             quit()
         if id == "exit":
             quit()
+        if id == "reset":
+            self.full_log = []
+            self.log.setText("\n"*5)
+            self.save_log()
 
         signing_out = False
         for entry in self.full_log:
@@ -220,6 +234,8 @@ class SignInWindow(QtWidgets.QWidget):
                 "id": id,
                 "time": time.time()
             })
+
+        self.save_log()
 
         if result == "allowed":
             self.text.setText(MESSAGE_SIGNED_OUT if signing_out else MESSAGE_ALLOWED)
