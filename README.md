@@ -1,6 +1,13 @@
 # Sign-In Application
 This is the application that will run on the sign-in computer. It provides a simple interface to log sign-ins and sign-outs.
 
+## Commands
+There are some built-in commands you can enter instead of an ID to do certain things:
+- Open terminal / command prompt: configurable in config.json 
+- Update & restart the program (doesn't reset the log): up
+- Reset saved log file (for a new day): reset
+- Close the window: exit
+
 ## Logic
 - When an ID is valid and the person is on the task list, it's added to the spreadsheet and the screen flashes green for 1 second.
 - When an ID is valid but the person is NOT on the task list, it's still added to the spreadsheet, but the screen flashes blue for 3 seconds as an indicator.
