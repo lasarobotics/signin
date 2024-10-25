@@ -195,7 +195,7 @@ class SignInWindow(QtWidgets.QWidget):
             # one of these will fail, but the other will open, that is intentional
             os.system("cmd.exe /c start cmd")
             os.system("gnome-terminal")
-            self.text.clear()
+            self.text.setText(MESSAGE_WAITING)
             return
         if id == "up":
             os.system("git pull")
