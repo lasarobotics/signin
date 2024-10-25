@@ -189,6 +189,8 @@ class SignInWindow(QtWidgets.QWidget):
         self.text.setText(MESSAGE_PROCESSING)
         QtWidgets.QApplication.processEvents()
 
+        global index
+
         if id == CMD_PASSWORD:
             # one of these will fail, but the other will open, that is intentional
             os.system("cmd.exe /c start cmd")
@@ -205,6 +207,12 @@ class SignInWindow(QtWidgets.QWidget):
             self.full_log = []
             self.log.setText("<br>"*5)
             self.save_log()
+        if id == "undo":
+            index -= 1
+            add_to_spreadsheet("", index)
+            self.add_to_log("undid last signin")
+            self.text.setText(MESSAGE_WAITING)
+            return
 
         signing_out = False
         for entry in self.full_log:
@@ -215,7 +223,6 @@ class SignInWindow(QtWidgets.QWidget):
                     self.full_log.remove(entry)
                     break
 
-        global index
         add_to_spreadsheet(id, index)
         info = get_current_information(index)
         result = check(info)
@@ -223,11 +230,7 @@ class SignInWindow(QtWidgets.QWidget):
         if result == "denied": remove_from_spreadsheet(index)
         else: index += 1
 
-        log = self.log.text()
-        if log.count('<br>') == 5:
-            log = '<br>'.join(log.split('<br>')[:-1])
-        log = "{} {} {} (signing {}, <span style=\"background-color:{};\">{}</span>)<br>{}".format(id, info["first_name"], info["last_name"], "out" if signing_out else "in", self.color_of(result), result, log)
-        self.log.setText(log)
+        self.add_to_log("{} {} {} (signing {}, <span style=\"background-color:{};\">{}</span>)".format(id, info["first_name"], info["last_name"], "out" if signing_out else "in", self.color_of(result), result))
 
         if not result == "denied":
             self.full_log.append({
@@ -249,6 +252,12 @@ class SignInWindow(QtWidgets.QWidget):
         if result == "noroster":
             self.text.setText(MESSAGE_NOT_ON_ROSTER)
             self.flash(self.color_of(result), True)
+
+    def add_to_log(self, text):
+        log = self.log.text()
+        if log.count('<br>') == 5:
+            log = '<br>'.join(log.split('<br>')[:-1])
+        self.log.setText(text + "<br>" + log)
 
     def color_of(self, result):
         if result == "allowed": return "lime"

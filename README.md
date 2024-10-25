@@ -6,6 +6,7 @@ There are some built-in commands you can enter instead of an ID to do certain th
 - Open terminal / command prompt: configurable in config.json, only really useful on Windows 
 - Update & restart the program (doesn't reset the log): up
 - Reset saved log file (for a new day): reset
+- Undo last sign-in: undo
 - Close the window (doesn't reset the log): exit
 
 ## Logic
