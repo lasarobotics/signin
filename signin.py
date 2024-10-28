@@ -32,6 +32,7 @@ def init_auth():
             except google.auth.exceptions.RefreshError as error:
                 print(error)
                 print("Invalid token.")
+                global tried_token_delete
                 if tried_token_delete == False:
                     print("Attempting to refresh by deleting it.")
                     os.remove("token.json")
@@ -80,7 +81,14 @@ def get_current_information(index):
             .execute()
         )
         rows = result.get("values", [])
-        return {"last_name": rows[0][4], "first_name": rows[0][5], "time": rows[0][3], "task": rows[0][7] == "Approved", "on_roster": len(rows[0]) == 9 and rows[0][8] == "Yes"}
+        return {
+            "last_name": rows[0][4],
+            "first_name": rows[0][5],
+            "time": rows[0][3],
+            "task": rows[0][7] == "Approved",
+            "on_roster": len(rows[0]) == 9 and rows[0][8] == "Yes",
+            "grade": rows[0][6]
+        }
     except HttpError as error:
         print(f"An error occured: {error}")
         return error
@@ -232,7 +240,7 @@ class SignInWindow(QtWidgets.QWidget):
         if result == "denied": remove_from_spreadsheet(index)
         else: index += 1
 
-        self.add_to_log("{} {} {} {} (signing {}, <span style=\"background-color:{};\">{}</span>)".format(info["time"], id, info["first_name"], info["last_name"], "out" if signing_out else "in", self.color_of(result), result))
+        self.add_to_log("{} {} {} {} {} (signing {}, <span style=\"background-color:{};\">{}</span>)".format(info["time"], id, info["first_name"], info["last_name"], info["grade"], "out" if signing_out else "in", self.color_of(result), result))
 
         if not result == "denied":
             self.full_log.append({
