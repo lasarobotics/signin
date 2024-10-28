@@ -207,6 +207,7 @@ class SignInWindow(QtWidgets.QWidget):
             self.full_log = []
             self.log.setText("<br>"*5)
             self.save_log()
+            return
         if id == "undo":
             index -= 1
             add_to_spreadsheet("", index)
