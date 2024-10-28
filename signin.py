@@ -232,7 +232,7 @@ class SignInWindow(QtWidgets.QWidget):
         if result == "denied": remove_from_spreadsheet(index)
         else: index += 1
 
-        self.add_to_log("{} {} {} (signing {}, <span style=\"background-color:{};\">{}</span>)".format(id, info["first_name"], info["last_name"], "out" if signing_out else "in", self.color_of(result), result))
+        self.add_to_log("{} {} {} {} (signing {}, <span style=\"background-color:{};\">{}</span>)".format(info["time"], id, info["first_name"], info["last_name"], "out" if signing_out else "in", self.color_of(result), result))
 
         if not result == "denied":
             self.full_log.append({
