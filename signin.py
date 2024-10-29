@@ -170,6 +170,8 @@ class SignInWindow(QtWidgets.QWidget):
         self.load_log()
         self.queued_flash_reset = None
 
+        self.fun_mode = False
+
     def load_log(self):
         self.full_log = []
         if os.path.exists("log.json"):
@@ -221,6 +223,10 @@ class SignInWindow(QtWidgets.QWidget):
             index -= 1
             add_to_spreadsheet("", index)
             self.add_to_log("undid last signin")
+            self.text.setText(MESSAGE_WAITING)
+            return
+        if id == "fun":
+            self.fun_mode = not self.fun_mode
             self.text.setText(MESSAGE_WAITING)
             return
 
@@ -278,9 +284,17 @@ class SignInWindow(QtWidgets.QWidget):
 
     def flash(self, color, full_window):
         pal = self.style().standardPalette()
-        pal.setColor(QtGui.QPalette.Base, color)
-        if full_window:
-            pal.setColor(QtGui.QPalette.Window, color)
+        if self.fun_mode:
+            image = "images/thumbsup.jpg"
+            if color == "red":
+                image = "images/stopsign.jpg"
+            elif color == "blue":
+                image = "images/yieldsign.jpg"
+            pal.setBrush(QtGui.QPalette.Window, QtGui.QBrush(QtGui.QPixmap(image)))
+        else:
+            pal.setColor(QtGui.QPalette.Base, color)
+            if full_window:
+                pal.setColor(QtGui.QPalette.Window, color)
         self.setAutoFillBackground(True)
         self.setPalette(pal)
 

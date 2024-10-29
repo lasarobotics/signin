@@ -8,6 +8,7 @@ There are some built-in commands you can enter instead of an ID to do certain th
 - Reset saved log file (for a new day): reset
 - Undo last sign-in: undo
 - Close the window (doesn't reset the log): exit
+- Toggle ✨Fun Mode✨ (no confetti unfortunately): fun
 
 ## Logic
 - When an ID is valid and the person is on the task list, it's added to the spreadsheet and the screen flashes green for 1 second.
