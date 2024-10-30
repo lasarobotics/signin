@@ -206,6 +206,7 @@ class SignInWindow(QtWidgets.QWidget):
             os.system("cmd.exe /c start cmd")
             os.system("gnome-terminal")
             self.text.setText(MESSAGE_WAITING)
+            self.add_to_log("opened cmd/terminal")
             return
         if id == "up":
             os.system("git pull")
@@ -227,6 +228,7 @@ class SignInWindow(QtWidgets.QWidget):
             return
         if id == "fun":
             self.fun_mode = not self.fun_mode
+            self.add_to_log("enabled fun moed!!1" if self.fun_mode else "youre no fun :(")
             self.text.setText(MESSAGE_WAITING)
             return
 
