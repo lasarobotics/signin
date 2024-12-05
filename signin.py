@@ -123,7 +123,7 @@ def check(info):
             return "noroster"
         if info["task"]:
             return "allowed"
-        else: return "notask"
+        else: return "allowed" #return "notask" since Dec 5, a task is not required
     return "denied"
 
 init_auth()
