@@ -158,12 +158,17 @@ class SignInWindow(QtWidgets.QWidget):
         self.log = QtWidgets.QLabel("<br>"*5, self)
         self.log.setAlignment(QtCore.Qt.AlignBottom)
 
+        self.count = 0
+        self.count_text = QtWidgets.QLabel("Sign-in count: " + str(self.count))
+        self.count_text.setAlignment(QtCore.Qt.AlignRight)
+
         self.layout = QtWidgets.QVBoxLayout(self)
         self.layout.addStretch()
         self.layout.addWidget(self.id)
         self.layout.addWidget(self.text)
         self.layout.addStretch()
         self.layout.addWidget(self.log)
+        self.layout.addWidget(self.count_text)
 
         self.id.returnPressed.connect(self.id_entered)
 
@@ -242,13 +247,18 @@ class SignInWindow(QtWidgets.QWidget):
                     break
 
         add_to_spreadsheet(id, index)
+        if not signing_out: self.count += 1
         info = get_current_information(index)
         result = check(info)
         if result == "notask" and signing_out: result = "allowed"
-        if result == "denied": remove_from_spreadsheet(index)
+        if result == "denied":
+            remove_from_spreadsheet(index)
+            if not signing_out: self.count -= 1
         else: index += 1
 
         self.add_to_log("{} {} {} {} {} (signing {}, <span style=\"background-color:{};\">{}</span>)".format(info["time"], id, info["first_name"], info["last_name"], info["grade"], "out" if signing_out else "in", self.color_of(result), result))
+        self.count_text.setText("Sign-in count: " + str(self.count))
+        print(self.count)
 
         if not result == "denied":
             self.full_log.append({
