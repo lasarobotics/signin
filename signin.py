@@ -21,6 +21,7 @@ SCOPES = ["https://www.googleapis.com/auth/spreadsheets"]
 service = None
 tried_token_delete = False
 
+
 def init_auth():
     creds = None
     if os.path.exists("token.json"):
@@ -136,6 +137,8 @@ MESSAGE_SIGNED_OUT = "Successfully signed out. Goodbye!"
 MESSAGE_DENIED = "Invalid ID."
 MESSAGE_NOT_ON_TASK_LIST = "You aren't on the task list!"
 MESSAGE_NOT_ON_ROSTER = "You aren't on the team roster!"
+MESSAGE_TOKEN_INVALID = "The token has expired. Type \"fix\", then \"restart\"."
+MESSAGE_TOKEN_DELETED = "token.json has been deleted. Please type \"restart\" to get a new one."
 
 class SignInWindow(QtWidgets.QWidget):
     def __init__(self):
@@ -237,6 +240,10 @@ class SignInWindow(QtWidgets.QWidget):
             self.add_to_log("enabled fun moed!!1" if self.fun_mode else "youre no fun :(")
             self.text.setText(MESSAGE_WAITING)
             return
+		if id == "fix":
+			os.remove("token.json")
+			self.text.setText(MESSAGE_TOKEN_DELETED)
+			return
 
         signing_out = False
         for entry in self.full_log:
@@ -246,8 +253,11 @@ class SignInWindow(QtWidgets.QWidget):
                     signing_out = True
                     self.full_log.remove(entry)
                     break
-
-        add_to_spreadsheet(id, index)
+        try:
+        	add_to_spreadsheet(id, index)
+		except RefreshError:
+			self.text.setText(MESSAGE_TOKEN_INVALID)
+			return
         if not signing_out: self.count += 1
         info = get_current_information(index)
         result = check(info)
