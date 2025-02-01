@@ -224,6 +224,7 @@ class SignInWindow(QtWidgets.QWidget):
             self.log.setText("<br>"*5)
             self.save_log()
             self.text.setText(MESSAGE_WAITING)
+            self.count = 0
             return
         if id == "undo":
             index -= 1
