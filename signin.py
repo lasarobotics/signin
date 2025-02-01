@@ -240,10 +240,10 @@ class SignInWindow(QtWidgets.QWidget):
             self.add_to_log("enabled fun moed!!1" if self.fun_mode else "youre no fun :(")
             self.text.setText(MESSAGE_WAITING)
             return
-		if id == "fix":
-			os.remove("token.json")
-			self.text.setText(MESSAGE_TOKEN_DELETED)
-			return
+        if id == "fix":
+            os.remove("token.json")
+            self.text.setText(MESSAGE_TOKEN_DELETED)
+            return
 
         signing_out = False
         for entry in self.full_log:
@@ -255,9 +255,9 @@ class SignInWindow(QtWidgets.QWidget):
                     break
         try:
         	add_to_spreadsheet(id, index)
-		except RefreshError:
-			self.text.setText(MESSAGE_TOKEN_INVALID)
-			return
+        except RefreshError:
+            self.text.setText(MESSAGE_TOKEN_INVALID)
+            return
         if not signing_out: self.count += 1
         info = get_current_information(index)
         result = check(info)
