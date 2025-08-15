@@ -382,8 +382,7 @@ class SignInWindow(QtWidgets.QWidget):
             self.text.setText(MESSAGE_WAITING)
             return
         if id_text == "up":
-            os.system("git pull")
-            subprocess.Popen(["bash", "./run.sh"])
+            subprocess.Popen(["bash", "/home/lasasignin/Desktop/signin.sh"])
             quit()
         if id_text == "exit":
             quit()
