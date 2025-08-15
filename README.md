@@ -5,20 +5,15 @@ This is the application that will run on the sign-in computer. It provides a sim
 There are some built-in commands you can enter instead of an ID to do certain things:
 - Open terminal / command prompt: configurable in config.json, only really useful on Windows 
 - Update & restart the program (doesn't reset the log): up
-- Reset saved log file (for a new day): reset
-- Undo last sign-in: undo
-- Close the window (doesn't reset the log): exit
+- Close the window: exit
+- Manually remove the auth token and try to re-authenticate: fix
 - Toggle ✨Fun Mode✨ (no confetti unfortunately): fun
 
 ## Logic
-- When an ID is valid and the person is on the task list, it's added to the spreadsheet and the screen flashes green for 1 second.
-- When an ID is valid but the person is NOT on the task list, it's still added to the spreadsheet, but the screen flashes blue for 3 seconds as an indicator.
-- When an ID is invalid, it is NOT added to the spreadsheet, and the screen flashes red for 3 seconds.
-
-- There's a small log at the bottom of the screen showing the past 10 entries.
-
-- If someone has signed in in the past 5 seconds and enters their ID again, it is ignored. This is to prevent people accidentally scanning their IDs twice in a row.
-- If someone has already signed in, it is assumed they are signing out (though it's not logged in the spreadsheet differently; only the message and small log show this)
+- When an ID is valid and the person is signed out, the person is signed in and their name is displayed on the signed in list.
+- When an ID is valid and the person is signed in, the person is signed out and their name is removed from the signed in list.
+- When an ID is invalid, it is NOT recorded, and the screen flashes red for 3 seconds.
+- The screen displays the individuals that are currently signed in.
 
 ## Installation
 1. Use Git (`sudo apt-get install git` or download it [here](https://git-scm.com/downloads) for Windows) to clone this repository or download the source and extract it in a directory of your choice.
