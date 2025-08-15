@@ -410,7 +410,7 @@ class SignInWindow(QtWidgets.QWidget):
                 return
 
             # ID is in the people directory. Add to raw record regardless of any other status
-            append_row('Raw Swipe Records', [swipe_time_str, id])
+            append_row('Raw Swipe Records', [swipe_time_str, id_text])
 
             # If the ID has an unprocessed swipe record, it's a sign-out
             signing_out = id_text in unprocessed_cache
@@ -420,7 +420,7 @@ class SignInWindow(QtWidgets.QWidget):
             if signing_out:
                 unprocessed_record = unprocessed_cache[id_text]
                 delete_row('1355997247', unprocessed_record.row_number)
-                append_row('Attendance Records', [unprocessed_record.swipe_time, swipe_time_str, id])
+                append_row('Attendance Records', [unprocessed_record.swipe_time, swipe_time_str, id_text])
                 unprocessed_cache.pop(id_text)
             else:
                 unprocessed_record = SwipeRecord([swipe_time_str, id_text], len(unprocessed_cache) + 2)
