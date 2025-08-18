@@ -322,9 +322,9 @@ class SignInWindow(QtWidgets.QWidget):
             signin_timg = unprocessed_cache[person_id].swipe_time_dt.strftime("%I:%M:%S %p")
             person_string = f"{signin_timg} {person.last_name}, {person.first_name}"
             if person.roster_status != "On Roster":
-                person_string = f"{person_string[:12]}<span style=\"background-color:yellow;\">{person_string[12:]}</span>"
+                person_string = f"{person_string[:12]}<span style=\"background-color:yellow;color:black;\">{person_string[12:]}</span>"
             elif person.role == "Lead":
-                person_string = f"{person_string[:12]}<span style=\"background-color:cyan;\">{person_string[12:]}</span>"
+                person_string = f"{person_string[:12]}<span style=\"background-color:cyan;color:black;\">{person_string[12:]}</span>"
             if person.role == "Mentor":
                 present_mentors.append(person_string)
             elif int(person.graduation_year) == senior_year:
