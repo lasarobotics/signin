@@ -256,6 +256,8 @@ class SignInWindow(QtWidgets.QWidget):
         self.juniors.setAlignment(QtCore.Qt.AlignLeft)
         self.seniors = QtWidgets.QLabel("Seniors:<br>", self)
         self.seniors.setAlignment(QtCore.Qt.AlignLeft)
+        self.teachers = QtWidgets.QLabel("Teachers:<br>", self)
+        self.teachers.setAlignment(QtCore.Qt.AlignLeft)
         self.mentors = QtWidgets.QLabel("Mentors:<br>", self)
         self.mentors.setAlignment(QtCore.Qt.AlignLeft)
 
@@ -286,7 +288,10 @@ class SignInWindow(QtWidgets.QWidget):
         self.present_layout.addWidget(self.sophomores)
         self.present_layout.addWidget(self.juniors)
         self.present_layout.addWidget(self.seniors)
-        self.present_layout.addWidget(self.mentors)
+        self.present_adults_layout = QtWidgets.QVBoxLayout()
+        self.present_adults_layout.addWidget(self.teachers)
+        self.present_adults_layout.addWidget(self.mentors)
+        self.present_layout.addLayout(self.present_adults_layout)
         self.layout.addLayout(self.present_layout)
 
         self.layout.addStretch()
@@ -299,10 +304,24 @@ class SignInWindow(QtWidgets.QWidget):
         self.fun_mode = False
 
         self.token_refresh_timer = QTimer(self)
-        self.token_refresh_timer.timeout.connect(init_auth)
+        self.token_refresh_timer.timeout.connect(self.periodic_actions)
         self.token_refresh_timer.start(1000 * 60 * 60)  # time in milliseconds.
 
         QTimer.singleShot(0, self.delayed_maximize)
+
+    def periodic_actions(self):
+        global unprocessed_cache
+        global people_cache
+        init_auth()
+        try:
+            refresh_people_cache()
+            refresh_unprocessed_cache()
+        except RefreshError:
+            os.remove("token.json")
+            return
+
+        self.update_present_list()
+
 
     def update_present_list(self):
         global unprocessed_cache
@@ -312,6 +331,7 @@ class SignInWindow(QtWidgets.QWidget):
         senior_year = now.year + 1 if now.month >= 6 else now.year
 
         present_mentors = []
+        present_teachers = []
         present_seniors = []
         present_juniors = []
         present_sophomores = []
@@ -325,7 +345,9 @@ class SignInWindow(QtWidgets.QWidget):
                 person_string = f"{person_string[:12]}<span style=\"background-color:yellow;color:black;\">{person_string[12:]}</span>"
             elif person.role == "Lead":
                 person_string = f"{person_string[:12]}<span style=\"background-color:cyan;color:black;\">{person_string[12:]}</span>"
-            if person.role == "Mentor":
+            if person.role == "Teacher":
+                present_teachers.append(person_string)
+            elif person.role == "Mentor":
                 present_mentors.append(person_string)
             elif int(person.graduation_year) == senior_year:
                 present_seniors.append(person_string)
@@ -336,12 +358,14 @@ class SignInWindow(QtWidgets.QWidget):
             elif int(person.graduation_year) == senior_year + 3:
                 present_freshmen.append(person_string)
 
+        present_teachers.sort(key=lambda x: x[12:])
         present_mentors.sort(key=lambda x: x[12:])
         present_seniors.sort(key=lambda x: x[12:])
         present_juniors.sort(key=lambda x: x[12:])
         present_sophomores.sort(key=lambda x: x[12:])
         present_freshmen.sort(key=lambda x: x[12:])
 
+        self.teachers.setText(f"<strong>Teachers</strong>:<br>{'<br>'.join(present_teachers)}")
         self.mentors.setText(f"<strong>Mentors</strong>:<br>{'<br>'.join(present_mentors)}")
         self.seniors.setText(f"<strong>Seniors</strong>:<br>{'<br>'.join(present_seniors)}")
         self.juniors.setText(f"<strong>Juniors</strong>:<br>{'<br>'.join(present_juniors)}")
@@ -419,7 +443,7 @@ class SignInWindow(QtWidgets.QWidget):
             if signing_out:
                 unprocessed_record = unprocessed_cache[id_text]
                 delete_row('1355997247', unprocessed_record.row_number)
-                append_row('Attendance Records', [unprocessed_record.swipe_time, swipe_time_str, id_text])
+                append_row('Attendance Records', [unprocessed_record.swipe_time, swipe_time_str, id_text, 'Regular', ''])
                 unprocessed_cache.pop(id_text)
             else:
                 unprocessed_record = SwipeRecord([swipe_time_str, id_text], len(unprocessed_cache) + 2)
