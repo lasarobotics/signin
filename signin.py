@@ -1,5 +1,4 @@
 import sys
-import os
 import subprocess
 from typing import Dict
 
@@ -8,226 +7,49 @@ import json
 
 from datetime import datetime
 import pytz
+import traceback
 
-import google.auth
 from PySide6.QtCore import QTimer
-from google.auth.exceptions import RefreshError
-from googleapiclient.discovery import build, Resource
-from googleapiclient.errors import HttpError
-from google.auth.transport.requests import Request
-from google.oauth2.credentials import Credentials
-from google_auth_oauthlib.flow import InstalledAppFlow
 
-from Attendance import AttendanceRecord
-from People import PersonRecord
-from Swipes import SwipeRecord
+import firebase_admin
+from firebase_admin import credentials, firestore
+from google.cloud.firestore_v1.base_document import DocumentSnapshot
 
-f = open("config.json", "r")
-j = json.load(f)
-SPREADSHEET_ID = j["spreadsheet_id"]
-CMD_PASSWORD = j["cmd_password"]
-f.close()
-SCOPES = ["https://www.googleapis.com/auth/spreadsheets"]
-service: Resource
-tried_token_delete = False
-people_cache: Dict[str, PersonRecord] = {}
-unprocessed_cache: Dict[str, SwipeRecord] = {}
+people_cache: Dict[str, DocumentSnapshot] = {}
+signed_in_cache: Dict[str, DocumentSnapshot] = {}
+last_swipes: Dict[str, datetime] = {}
+
+cred = credentials.Certificate("token.json")
+firebase_admin.initialize_app(cred)
+
+db = firestore.client()
+people_ref = db.collection('people')
+attendance_records_ref = db.collection('attendanceRecords')
+signed_in_ref = db.collection('signedIn')
 
 
-def init_auth():
-    creds = None
-
-    if os.path.exists("token.json"):
-        creds = Credentials.from_authorized_user_file("token.json", SCOPES)
-
-    if not creds or not creds.valid:
-        print(f"No Valid Token Found")
-        if creds and creds.expired and creds.refresh_token:
-            try:
-                print(f"Attempting credential refresh")
-                creds.refresh(Request())
-            except google.auth.exceptions.RefreshError as error:
-                print(error)
-                print("Invalid token.")
-                global tried_token_delete
-                if not tried_token_delete:
-                    print("Attempting to refresh by deleting it.")
-                    os.remove("token.json")
-                    tried_token_delete = True
-                    init_auth()
-                else:
-                    print("Deleting the token didn't seem to work. Dropping you into a terminal, good luck.")
-                    os.system("cmd.exe /c start cmd")
-                    os.system("gnome-terminal")
-                    quit()
-        else:
-            print(f"Attempting Sign-In")
-            flow = InstalledAppFlow.from_client_secrets_file(
-                "credentials.json", SCOPES
-            )
-            creds = flow.run_local_server(port=0)
-            print(f"Sign-In Credentials Validated")
-        with open("token.json", "w") as token:
-            print(f"Saving Token")
-            token.write(creds.to_json())
-            print(f"Token Saved")
-    try:
-        global service
-        service = build("sheets", "v4", credentials=creds)
-        print(f"Google Sheets Service Built")
-    except HttpError as error:
-        print(f"An error occured: {error}")
-
-
-def modify_row(sheet, row_number, values):
-    range_name = f"{sheet}!A{row_number}"
-
-    start = datetime.now()
-    try:
-        service.spreadsheets().values().update(
-            spreadsheetId=SPREADSHEET_ID,
-            range=range_name,
-            valueInputOption='RAW',
-            body={"values": values}
-        ).execute()
-    except HttpError as error:
-        print(f"An error occurred: {error}")
-        return
-    stop = datetime.now()
-    api_time = (stop - start).total_seconds() * 1000.0
-    print(f"PUT {range_name} API Time: {api_time} ms")
-
-
-def get_row(sheet, row_number):
-    range_name = f"{sheet}!{row_number}:{row_number}"
-
-    start = datetime.now()
-    try:
-        result = service.spreadsheets().values().get(
-            spreadsheetId=SPREADSHEET_ID,
-            range=range_name
-        ).execute()
-    except HttpError as error:
-        print(f"An error occurred: {error}")
-        return None
-    stop = datetime.now()
-    api_time = (stop - start).total_seconds() * 1000.0
-    print(f"GET {range_name} API Time: {api_time} ms")
-
-    row = result.get('values', [[]])[0]  # Avoid IndexError if empty
-    return row
-
-
-def delete_row(sheet_id, row_number):
-    range_name = f"{sheet_id}!{row_number}:{row_number}"
-    request_body = {
-        "requests": [
-            {
-                "deleteDimension": {
-                    "range": {
-                        "sheetId": sheet_id,
-                        "dimension": "ROWS",
-                        "startIndex": int(row_number) - 1,
-                        "endIndex": int(row_number)
-                    }
-                }
-            }
-        ]
-    }
-
-    start = datetime.now()
-    try:
-        service.spreadsheets().batchUpdate(
-            spreadsheetId=SPREADSHEET_ID,
-            body=request_body
-        ).execute()
-    except HttpError as error:
-        print(f"An error occurred: {error}")
-        return
-    stop = datetime.now()
-    api_time = (stop - start).total_seconds() * 1000.0
-    print(f"DELETE {range_name} API Time: {api_time} ms")
-
-
-def append_row(sheet, values):
-    range_name = f"{sheet}!A1"
-
-    start = datetime.now()
-    try:
-        service.spreadsheets().values().append(
-            spreadsheetId=SPREADSHEET_ID,
-            range=range_name,
-            valueInputOption='RAW',
-            insertDataOption='INSERT_ROWS',
-            body={'values': [values]}
-        ).execute()
-    except HttpError as error:
-        print(f"An error occurred: {error}")
-        return
-    stop = datetime.now()
-    api_time = (stop - start).total_seconds() * 1000.0
-    print(f"POST {range_name} API Time: {api_time} ms")
-
-
-def refresh_people_cache():
-    start = datetime.now()
-    try:
-        result = service.spreadsheets().values().get(
-            spreadsheetId=SPREADSHEET_ID,
-            range="People"
-        ).execute()
-    except HttpError as error:
-        print(f"An error occurred: {error}")
-        return
-    stop = datetime.now()
-    api_time = (stop - start).total_seconds() * 1000.0
-    print(f"GET People API Time: {api_time} ms")
-
-    values = result.get('values', [])
-    values = values[1:]  # remove the header
-
+def refresh_cache():
+    global signed_in_ref
+    global people_ref
+    global signed_in_cache
     global people_cache
-    people_cache.clear()
-    for i, row in enumerate(values):
-        record = PersonRecord(row, i + 2)
-        people_cache[record.id] = record
-
-
-def refresh_unprocessed_cache():
     start = datetime.now()
-    try:
-        result = service.spreadsheets().values().get(
-            spreadsheetId=SPREADSHEET_ID,
-            range="Unprocessed Sign Ins"
-        ).execute()
-    except HttpError as error:
-        print(f"An error occurred: {error}")
-        return
+    signed_in_stream = signed_in_ref.stream()
+    for signed_in in signed_in_stream:
+        signed_in_cache[signed_in.id] = signed_in
+        people_cache[signed_in.id] = people_ref.document(signed_in.id).get()
     stop = datetime.now()
     api_time = (stop - start).total_seconds() * 1000.0
-    print(f"GET Unprocessed Sign Ins API Time: {api_time} ms")
+    print(f"Refresh people cache API Time: {api_time} ms")
 
-    values = result.get('values', [])
-    values = values[1:]  # remove the header
-
-    global unprocessed_cache
-    unprocessed_cache.clear()
-    for i, row in enumerate(values):
-        record = SwipeRecord(row, i + 2)
-        unprocessed_cache[record.person_id] = record
-
-
-init_auth()
 
 MESSAGE_WAITING = "Scan your ID card OR type your ID above and press ENTER."
 MESSAGE_PROCESSING = "Please wait..."
 MESSAGE_ALLOWED = "Successfully signed in. Welcome to robotics!"
 MESSAGE_SIGNED_OUT = "Successfully signed out. Goodbye!"
 MESSAGE_DENIED = "Invalid ID."
-MESSAGE_NOT_ON_TASK_LIST = "You aren't on the task list!"
-MESSAGE_NOT_ON_ROSTER = "You aren't on the team roster!"
-MESSAGE_TOKEN_INVALID = "The token has expired. Type \"fix\", then \"restart\"."
-MESSAGE_TOKEN_DELETED = "token.json has been deleted. Please type \"restart\" to get a new one."
+MESSAGE_COOL_DOWN = "Too many swipes! Wait a bit!"
+MESSAGE_ERROR = "ERROR ERROR ERROR ERROR ERROR ERROR"
 
 
 class SignInWindow(QtWidgets.QWidget):
@@ -260,22 +82,7 @@ class SignInWindow(QtWidgets.QWidget):
         self.teachers.setAlignment(QtCore.Qt.AlignLeft)
         self.mentors = QtWidgets.QLabel("Mentors:<br>", self)
         self.mentors.setAlignment(QtCore.Qt.AlignLeft)
-
-        global unprocessed_cache
-        global people_cache
-
-        try:
-            refresh_people_cache()
-            refresh_unprocessed_cache()
-        except RefreshError:
-            os.remove("token.json")
-            init_auth()
-            refresh_people_cache()
-            refresh_unprocessed_cache()
-
-        self.update_present_list()
-
-        self.count_text = QtWidgets.QLabel(f"Sign-in count: {len(unprocessed_cache)}")
+        self.count_text = QtWidgets.QLabel(f"Sign-in count:")
         self.count_text.setAlignment(QtCore.Qt.AlignRight)
 
         self.layout = QtWidgets.QVBoxLayout(self)
@@ -299,33 +106,25 @@ class SignInWindow(QtWidgets.QWidget):
 
         self.id.returnPressed.connect(self.id_entered)
 
-        self.queued_flash_reset = None
+        self.daily_actions()
 
-        self.fun_mode = False
+        QTimer.singleShot(0, self.showMaximized)
 
-        self.token_refresh_timer = QTimer(self)
-        self.token_refresh_timer.timeout.connect(self.periodic_actions)
-        self.token_refresh_timer.start(1000 * 60 * 60)  # time in milliseconds.
+    def daily_actions(self):
+        print("Running Daily Actions")
 
-        QTimer.singleShot(0, self.delayed_maximize)
-
-    def periodic_actions(self):
-        global unprocessed_cache
-        global people_cache
-        init_auth()
-        try:
-            refresh_people_cache()
-            refresh_unprocessed_cache()
-        except RefreshError:
-            os.remove("token.json")
-            return
-
+        refresh_cache()
         self.update_present_list()
 
+        now = QtCore.QDateTime.currentDateTime()
+        next_execution_time = QtCore.QDateTime(now.date().addDays(1), QtCore.QTime(1, 0, 0, 0))
+
+        delay_ms = now.msecsTo(next_execution_time)
+        QTimer.singleShot(delay_ms, self.daily_actions)
 
     def update_present_list(self):
-        global unprocessed_cache
         global people_cache
+        global signed_in_cache
 
         now = datetime.now(pytz.timezone('US/Central'))
         senior_year = now.year + 1 if now.month >= 6 else now.year
@@ -337,25 +136,26 @@ class SignInWindow(QtWidgets.QWidget):
         present_sophomores = []
         present_freshmen = []
 
-        for person_id in unprocessed_cache:
-            person = people_cache[person_id]
-            signin_timg = unprocessed_cache[person_id].swipe_time_dt.strftime("%I:%M:%S %p")
-            person_string = f"{signin_timg} {person.last_name}, {person.first_name}"
-            if person.roster_status != "On Roster":
+        for person_id, signed_in_doc in signed_in_cache.items():
+            person = people_cache[person_id].to_dict()
+            signed_in_doc = signed_in_cache[person_id]
+            sign_in_time_str = signed_in_doc.to_dict()["signInTime"].strftime("%I:%M:%S %p")
+            person_string = f"{sign_in_time_str} {person['lastName']}, {person['firstName']}"
+            if person['rosterStatus'] != "On Roster":
                 person_string = f"{person_string[:12]}<span style=\"background-color:yellow;color:black;\">{person_string[12:]}</span>"
-            elif person.role == "Lead":
+            elif person['role'] == "Lead":
                 person_string = f"{person_string[:12]}<span style=\"background-color:cyan;color:black;\">{person_string[12:]}</span>"
-            if person.role == "Teacher":
+            if person['role'] == "Teacher":
                 present_teachers.append(person_string)
-            elif person.role == "Mentor":
+            elif person['role'] == "Mentor":
                 present_mentors.append(person_string)
-            elif int(person.graduation_year) == senior_year:
+            elif int(person['graduationYear']) == senior_year:
                 present_seniors.append(person_string)
-            elif int(person.graduation_year) == senior_year + 1:
+            elif int(person['graduationYear']) == senior_year + 1:
                 present_juniors.append(person_string)
-            elif int(person.graduation_year) == senior_year + 2:
+            elif int(person['graduationYear']) == senior_year + 2:
                 present_sophomores.append(person_string)
-            elif int(person.graduation_year) == senior_year + 3:
+            elif int(person['graduationYear']) == senior_year + 3:
                 present_freshmen.append(person_string)
 
         present_teachers.sort(key=lambda x: x[12:])
@@ -371,23 +171,12 @@ class SignInWindow(QtWidgets.QWidget):
         self.juniors.setText(f"<strong>Juniors</strong>:<br>{'<br>'.join(present_juniors)}")
         self.sophomores.setText(f"<strong>Sophomores</strong>:<br>{'<br>'.join(present_sophomores)}")
         self.freshmen.setText(f"<strong>Freshmen</strong>:<br>{'<br>'.join(present_freshmen)}")
-
-    def delayed_maximize(self):
-        self.showMaximized()
-
-    def reset_text(self):
-        self.text.setText(MESSAGE_WAITING)
-
-    def reset_flash(self):
-        pal = self.style().standardPalette()
-        self.setPalette(pal)
-        self.reset_text()
+        self.count_text.setText(f"Sign-in count: {len(signed_in_cache)}")
 
     @QtCore.Slot()
     def id_entered(self):
         print('---------------------------------------')
         swipe_time = datetime.now(pytz.timezone('US/Central'))
-        swipe_time_str = swipe_time.strftime('%m/%d/%Y %H:%M:%S')
 
         raw_id = self.id.text()
         id_text = raw_id
@@ -399,100 +188,90 @@ class SignInWindow(QtWidgets.QWidget):
         self.text.setText(MESSAGE_PROCESSING)
         QtWidgets.QApplication.processEvents()
 
-        if id_text == CMD_PASSWORD:
-            # one of these will fail, but the other will open, that is intentional
-            os.system("cmd.exe /c start cmd")
-            os.system("gnome-terminal")
-            self.text.setText(MESSAGE_WAITING)
-            return
         if id_text == "up":
             subprocess.Popen(["bash", "/home/lasasignin/Desktop/signin.sh"])
             quit()
         if id_text == "exit":
             quit()
-        if id_text == "fun":
-            self.fun_mode = not self.fun_mode
-            self.text.setText(MESSAGE_WAITING)
-            return
-        if id_text == "fix":
-            os.remove("token.json")
-            init_auth()
-            return
 
         try:
-            global unprocessed_cache
+            global signed_in_cache
             global people_cache
+            global people_ref
+            global signed_in_ref
+            global attendance_records_ref
 
-            refresh_people_cache()
-            refresh_unprocessed_cache()
+            person_doc = people_ref.document(id_text).get()
 
             # ID was not found in people directory
-            if id_text not in people_cache:
+            if not person_doc.exists:
                 self.text.setText(MESSAGE_DENIED)
-                self.flash("red", True)
+                self.flash("orange", 1000)
                 return
 
-            # ID is in the people directory. Add to raw record regardless of any other status
-            append_row('Raw Swipe Records', [swipe_time_str, id_text])
+            # If exists, add to people cache
+            people_cache[person_doc.id] = person_doc
 
-            # If the ID has an unprocessed swipe record, it's a sign-out
-            signing_out = id_text in unprocessed_cache
+            # Handle case where someone swipes for the first time
+            if person_doc.id not in last_swipes:
+                last_swipes[person_doc.id] = swipe_time
+            # Don't let someone accidentally double swipe
+            elif (swipe_time - last_swipes[person_doc.id]).total_seconds() < 30:
+                self.text.setText(MESSAGE_COOL_DOWN)
+                self.flash("yellow", 1000)
+                return
 
-            person = people_cache[id_text]
+            last_swipes[person_doc.id] = swipe_time
 
-            if signing_out:
-                unprocessed_record = unprocessed_cache[id_text]
-                delete_row('1355997247', unprocessed_record.row_number)
-                append_row('Attendance Records', [unprocessed_record.swipe_time, swipe_time_str, id_text, 'Regular', ''])
-                unprocessed_cache.pop(id_text)
+            sign_in_ref = signed_in_ref.document(person_doc.id)
+            sign_in_doc = sign_in_ref.get()
+
+            # If there is a doc in the signed in db, it's a sign-in
+            if sign_in_doc.exists:
+                sign_in_ref.delete()
+                attendance_records_ref.add({
+                    "signInTime": sign_in_doc.to_dict()["signInTime"],
+                    "signOutTime": swipe_time,
+                    "personId": person_doc.id,
+                    "recordType": "Regular",
+                    "note": ""
+                })
+                del signed_in_cache[person_doc.id]
+                self.text.setText(MESSAGE_SIGNED_OUT)
+                self.flash("cyan", 500)
+            # If there is no doc in the signed in db, it's a sign-out
             else:
-                unprocessed_record = SwipeRecord([swipe_time_str, id_text], len(unprocessed_cache) + 2)
-                unprocessed_cache[id_text] = unprocessed_record
-                append_row('Unprocessed Sign Ins', unprocessed_record.get_raw_record())
+                sign_in_ref.set({
+                    "signInTime": swipe_time,
+                    "personId": person_doc.id
+                })
+                signed_in_cache[person_doc.id] = sign_in_ref.get()
+                self.text.setText(MESSAGE_ALLOWED)
+                self.flash("purple", 500)
 
             self.update_present_list()
-
-            color = "yellow"
-            if person.roster_status == 'On Roster':
-                color = "lime"
-                self.text.setText(MESSAGE_SIGNED_OUT if signing_out else MESSAGE_ALLOWED)
-                self.flash(color, False)
-            else:
-                color = "yellow"
-                self.text.setText(MESSAGE_NOT_ON_ROSTER)
-                self.flash(color, True)
-
-            self.count_text.setText(f"Sign-in count: {len(unprocessed_cache)}")
-
             print(f"Total Processing Time: {(datetime.now(pytz.timezone('US/Central')) - swipe_time).total_seconds()}s")
 
-        except RefreshError:
-            os.remove("token.json")
-            init_auth()
-            self.id.setText(raw_id)
-            self.id_entered()
+        except Exception as e:
+            print(f"An unexpected error occurred: {e}")
+            print("Detailed traceback:")
+            traceback.print_exc()
+            self.text.setText(MESSAGE_ERROR)
+            self.flash("red", 5000)
 
-    def flash(self, color, full_window):
+    def flash(self, color, length):
         pal = self.style().standardPalette()
-        if self.fun_mode:
-            image = "images/thumbsup.jpg"
-            if color == "yellow":
-                image = "images/stopsign.jpg"
-            pal.setBrush(QtGui.QPalette.Window, QtGui.QBrush(QtGui.QPixmap(image)))
-        else:
-            pal.setColor(QtGui.QPalette.Base, color)
-            if full_window:
-                pal.setColor(QtGui.QPalette.Window, color)
+        pal.setColor(QtGui.QPalette.Base, color)
+        pal.setColor(QtGui.QPalette.Window, color)
         self.setAutoFillBackground(True)
         self.setPalette(pal)
 
-        time = QtCore.QTime.currentTime()
-        self.queued_flash_reset = time
-        dieTime = time.addSecs(0.25 if color == "green" else 1)
-        while (QtCore.QTime.currentTime() < dieTime):
-            QtCore.QCoreApplication.processEvents(QtCore.QEventLoop.AllEvents, 100)
-        if self.queued_flash_reset == time:
-            self.reset_flash()
+        QTimer.singleShot(length, self.reset_window)
+
+    def reset_window(self):
+        pal = self.style().standardPalette()
+        self.setPalette(pal)
+        self.text.setText(MESSAGE_WAITING)
 
 
 app = QtWidgets.QApplication([])
