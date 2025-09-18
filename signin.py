@@ -33,6 +33,7 @@ def refresh_cache():
     global people_ref
     global signed_in_cache
     global people_cache
+    signed_in_cache = {}
     start = datetime.now()
     signed_in_stream = signed_in_ref.stream()
     for signed_in in signed_in_stream:
