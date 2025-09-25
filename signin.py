@@ -140,7 +140,7 @@ class SignInWindow(QtWidgets.QWidget):
         for person_id, signed_in_doc in signed_in_cache.items():
             person = people_cache[person_id].to_dict()
             signed_in_doc = signed_in_cache[person_id]
-            sign_in_time_str = signed_in_doc.to_dict()["signInTime"].strftime("%I:%M:%S %p")
+            sign_in_time_str = signed_in_doc.to_dict()["signInTime"].astimezone(pytz.timezone('US/Central')).strftime("%I:%M:%S %p")
             person_string = f"{sign_in_time_str} {person['lastName']}, {person['firstName']}"
             if person['rosterStatus'] != "On Roster":
                 person_string = f"{person_string[:12]}<span style=\"background-color:yellow;color:black;\">{person_string[12:]}</span>"
